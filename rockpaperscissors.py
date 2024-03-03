@@ -348,7 +348,7 @@ def run_cells(clock, overlay, screen):
                     plt.xlim(0,50000)
                 else:
                     plt.xlim(framecounter-50000, framecounter)
-                plt.ylabel('Average Strat', color = 'white')
+                plt.ylabel('Population', color = 'white')
 
                 plt.grid(False)  # Turn off grid
                 plt.gca().spines['top'].set_visible(False)
