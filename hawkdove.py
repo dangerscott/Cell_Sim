@@ -91,8 +91,8 @@ def popup():
     running = True
     text1 = 'This game simulates Hawks and Doves interacting.'
     text2 = 'Hawks are red, Doves are green.'
-    text3 = 'To pause/unpause the game, press spacebar.'
-    text4 = 'The game cycles through three iterations of different populations.'
+    text3 = 'To pause/unpause, press spacebar.'
+    text4 = 'There are three iterations of different populations.'
     text5 = 'To cycle through them, press q.'
     image = py.image.load(str(current_directory)+'/assets/hawk_mouse.png')
     while running == True:
@@ -119,11 +119,11 @@ def popup():
         screen.blit(text3_surface, text3_rect)
 
         text4_surface = font.render(text4, True, black)
-        text4_rect = text4_surface.get_rect(center = (w/2,h/2 -190))
+        text4_rect = text4_surface.get_rect(center = (w/2,h/2 -90))
         screen.blit(text4_surface, text4_rect)
 
         text5_surface = font.render(text5, True, black)
-        text5_rect = text5_surface.get_rect(center = (w/2,h/2 - 170))
+        text5_rect = text5_surface.get_rect(center = (w/2,h/2 - 70))
         screen.blit(text5_surface, text5_rect)
         py.display.flip()
  
