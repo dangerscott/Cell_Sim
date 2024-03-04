@@ -66,6 +66,7 @@ def engage(cella,cellb, payoffa, payoffb):
     return resulta, resultb, row, col
 
 font = py.font.Font(None, 36)
+fontsmall = py.font.Font(None, 25)
 
 def popup():
     global current_directory
@@ -79,6 +80,7 @@ def popup():
     text3 = 'They all play against eachother.'
     text4 = 'The luckiest cells are given fitness counters.'
     text5 = 'To pause, press spacebar. To quit, press q.'
+    text6 = 'To access and exit settings, press s.'
     image = py.image.load(str(current_directory)+'/assets/rps.png')
     while running == True:
         for event in py.event.get():
@@ -92,24 +94,28 @@ def popup():
         py.image.load(str(current_directory)+'/assets/hawk_mouse.png')
 
         text1_surface = font.render(text1, True, black)
-        text1_rect = text1_surface.get_rect(center = (w/2,h/2 - 150))
+        text1_rect = text1_surface.get_rect(center = (w/2,h/2 - 170))
         screen.blit(text1_surface, text1_rect)
 
         text2_surface = font.render(text2, True, black)
-        text2_rect = text2_surface.get_rect(center = (w/2,h/2 - 130))
+        text2_rect = text2_surface.get_rect(center = (w/2,h/2 - 150))
         screen.blit(text2_surface, text2_rect)
 
         text3_surface = font.render(text3, True, black)
-        text3_rect = text3_surface.get_rect(center = (w/2,h/2 - 110))
+        text3_rect = text3_surface.get_rect(center = (w/2,h/2 - 130))
         screen.blit(text3_surface, text3_rect)
 
         text4_surface = font.render(text4, True, black)
-        text4_rect = text4_surface.get_rect(center = (w/2,h/2 - 90))
+        text4_rect = text4_surface.get_rect(center = (w/2,h/2 - 110))
         screen.blit(text4_surface, text4_rect)
 
         text5_surface = font.render(text5, True, black)
-        text5_rect = text5_surface.get_rect(center = (w/2,h/2 -70))
+        text5_rect = text5_surface.get_rect(center = (w/2,h/2 -90))
         screen.blit(text5_surface, text5_rect)
+
+        text6_surface = font.render(text6, True, black)
+        text6_rect = text6_surface.get_rect(center = (w/2,h/2 -70))
+        screen.blit(text6_surface, text6_rect)
         py.display.flip()
 
 
@@ -149,7 +155,9 @@ def run_cells(clock, overlay, screen):
     framecounter = 0
     pause = 1
     running = True
+    mutation_chance = 0.05
     while running == True:
+
         #Build tree for cells to find nearest neighbour efficiently
         tree, list = build_ckd(cells)    
       # PRINT CELL CHARACTERISTICS ON CLICK
@@ -165,6 +173,9 @@ def run_cells(clock, overlay, screen):
             elif event.type == py.KEYDOWN:
                 if event.key == py.K_SPACE:
                     pause = -pause
+                if event.key == py.K_s:
+                    running, mutation_chance = sliders(screen, mutation_chance)
+                    print(mutation_chance)
 
             elif event.type == py.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button clicked
@@ -267,7 +278,7 @@ def run_cells(clock, overlay, screen):
 
             #reproduce and die every minute
             current_time = py.time.get_ticks()
-            if current_time - last_action_time1 >= 5000 or last_action_time1 == 0:
+            if current_time - last_action_time1 >= 5000:
                 last_action_time1 = current_time 
 
                 deadlist = []
@@ -284,7 +295,8 @@ def run_cells(clock, overlay, screen):
 
                     #for cell in bornlist, change its strategy slightly with a 5% chance
                     num = random.random()
-                    if num > 0.95:
+                    if num > 1 - mutation_chance:
+                        print('mutated')
 
 
                         if baby.strat == (0,0,1):
@@ -376,9 +388,84 @@ def run_cells(clock, overlay, screen):
         screen.blit(graph_image, (0, screen_h - graph_image.get_height() - 10))         
         clock.tick(fps)
 
+        
+
         py.display.flip()
 
     py.quit()
+
+
+
+#Mutation chance slider
+def sliders(screen, mutation_chance):
+    white_cornx, whitecorny = screen_w - 205, 5
+    sliderx = mutation_chance*155
+    sliderx = screen_w-205+25+sliderx
+
+    slider_coords = (sliderx, whitecorny+25)
+
+
+    settings_running = True
+    dragging = False
+
+    while settings_running == True:
+        py.draw.circle(screen, (0,0,0), (slider_coords), 10)
+        for event in py.event.get():
+            if event.type == py.MOUSEBUTTONDOWN and event.button == 1:
+                mouse_x, mousey = py.mouse.get_pos()
+                if numpy.linalg.norm(numpy.array((mouse_x, mousey)) - numpy.array(slider_coords)) <= 10:
+                    dragging = True
+            if event.type == py.MOUSEBUTTONUP and event.button == 1:
+                    dragging = not dragging
+            if event.type == py.MOUSEMOTION:
+                if dragging:
+                    mouse_x, mouse_y = py.mouse.get_pos()
+                    if mouse_x <= white_cornx +20:
+                        mouse_x = white_cornx+20
+                    if mouse_x >= white_cornx+180:
+                        mouse_x = white_cornx +180
+                    slider_coords = (mouse_x, whitecorny+25)
+
+            if event.type == py.KEYDOWN and event.key == py.K_s:
+                settings_running = False
+                return True, mutation_chance    
+            elif event.type == py.KEYDOWN and event.key == py.K_q:
+                settings_running = False  
+                return False , mutation_chance
+            
+       
+
+        py.draw.rect(screen, (0,0,0), (screen_w - 210, 0, 210, 60))
+        py.draw.rect(screen, (255,255,255), (white_cornx, whitecorny, 200, 50))
+
+        py.draw.rect(screen, (128,128,128), (white_cornx+20, whitecorny+20, 160, 10))
+
+        py.draw.circle(screen, (128,128,128), (white_cornx+22, whitecorny+25), 5)
+        py.draw.circle(screen, (128,128,128), (white_cornx+180, whitecorny+25), 5)  
+
+        py.draw.circle(screen, (0,0,0), (slider_coords), 10)
+
+
+
+        mut_chance = fontsmall.render('Chance of Mutation', True, black)
+        mutrect = mut_chance.get_rect()
+        mutrect.center = (white_cornx + 100, whitecorny+10)
+        screen.blit(mut_chance, mutrect)
+
+        num = slider_coords[0]
+        num = num - screen_w +180
+        num = num/155
+        mutation_chance = num
+        num = 100*num
+        num = round(num, 1)
+        num = font.render(str(num), True, black)
+        textrect = num.get_rect()
+        textrect.center = (white_cornx +100, whitecorny +41 )
+        screen.blit(num, textrect)
+
+
+
+        py.display.flip()
 
 def initialize_game():
     py.init()
