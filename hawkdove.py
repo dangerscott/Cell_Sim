@@ -136,6 +136,10 @@ def run_cells(ishawk, n):
 
     screen = py.display.set_mode((screen_w, screen_h))
     py.display.set_caption('Hawks and Doves')
+    overlay = py.Surface((1631, 711))
+    overlay.set_alpha(128)
+    overlay.fill(black)
+
 
 
     global average
@@ -222,6 +226,7 @@ def run_cells(ishawk, n):
                             print(cell)
                             break
         screen.fill(black)
+
 
         if pause:
             for cell in cells:                  
@@ -342,18 +347,19 @@ def run_cells(ishawk, n):
                 plt.ylim(0, len(cells))  # Set y-axis limit to population
 
                 # Set x-axis limit dynamically
-                if framecounter < 500000:
-                    plt.xlim(0,500000)
+                if framecounter < 50:
+                    plt.xlim(0,50)
                 else:
-                    plt.xlim(framecounter-500000, framecounter)
+                    plt.xlim(framecounter-50, framecounter)
 
                 plt.grid(False)  # Turn off grid
+                plt.ylabel('Population', color = 'white')
                 plt.tick_params(axis='y', colors='white')  # Set tick color to white for y-axis
 
                 graphdir = str(current_directory) + '/assets/graph_hawkdove.png'
                 plt.savefig(graphdir, bbox_inches='tight', pad_inches=0, transparent=True)  # Save the plot
                 plt.close()
-                framecounter += clock.tick(fps)
+                framecounter += 1
           
 
         #draw cells
@@ -366,6 +372,7 @@ def run_cells(ishawk, n):
             py.draw.circle(screen, cell.colour, cell.position, cell.size/2)
         try:
             graph_image = py.image.load(graphdir)
+            screen.blit(overlay, (0,711))
             screen.blit(graph_image, (0, screen_h - graph_image.get_height() - 60)) 
         except:
             pass   
