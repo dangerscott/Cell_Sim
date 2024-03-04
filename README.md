@@ -1,5 +1,7 @@
 this is a simulation of interactions, reproduction and death in a population
 
+-----------------------------------
+
 in rockpaperscissors.py, the area is populated with cells that only play rock. Every 5 seconds, the top five cells in terms of 
 fitness reproduce, and 5 randomly die. Each cell that is born has a chance to mutate to the move that beats its parent - 
 rock -> paper -> scissors.
