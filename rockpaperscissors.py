@@ -12,7 +12,7 @@ import numpy
 import time
 from ClassCell import Cell, collide
 
-
+from slider import slider
 import os
 
 # Get the directory of the currently running Python script
@@ -120,7 +120,7 @@ def popup():
 
 
 
-
+size = 60
 fps = 60
 font = py.font.Font(None, 36)
 #Game loop
@@ -156,6 +156,11 @@ def run_cells(clock, overlay, screen):
     pause = 1
     running = True
     mutation_chance = 0.05
+    speed = 20
+    life_time = 5000
+    no_cells_in_gen = 5
+    size = 60
+    pop = len(cells)
     while running == True:
 
         #Build tree for cells to find nearest neighbour efficiently
@@ -174,8 +179,40 @@ def run_cells(clock, overlay, screen):
                 if event.key == py.K_SPACE:
                     pause = -pause
                 if event.key == py.K_s:
-                    running, mutation_chance = sliders(screen, mutation_chance)
-                    print(mutation_chance)
+                    running, mutation_chance = slider(screen, running, (screen_w-210, 0), mutation_chance, 1, 'Chance of mutation')
+                    running, speed = slider(screen, running, (screen_w -210, 60), speed, 100, 'Cell speed')
+                    running, size = slider(screen, running, (screen_w-210, 120), size, 100, 'Cell radius')
+
+                    life_time = life_time/1000
+                    running, life_time = slider(screen, running, (screen_w - 210, 180), life_time, 10, 'Cell lifespan (s)')
+                    life_time = life_time*1000
+
+                    running, no_cells_in_gen = slider(screen, running, (screen_w - 210, 240), no_cells_in_gen, 50, 'Cells born/dead / gen')
+
+                    no_cells_in_gen = int(no_cells_in_gen)
+
+                    running, pop = slider(screen, running, (screen_w-210, 300), pop, 500, "Population")
+                    pop = int(pop)
+                    if pop < 10:
+                        pop = 10
+                        deadlist = random.sample(cells, len(cells)-pop)
+                        cells = [cell for cell in cells if cell not in deadlist]
+                    elif len(cells) > pop:
+                        deadlist = random.sample(cells, len(cells)-pop)
+                        cells = [cell for cell in cells if cell not in deadlist]
+
+                    if len(cells)+1  < pop:
+                        newcells = []
+                        for i in range(pop - len(cells)):
+                            newstrat = random.choice(((0,0,1), (0,1,0), (1,0,0)))
+                            celli = Cell((random.random()*screen_w, random.random()*screen_h), strat = newstrat)
+                            newcells.append(celli)
+                        for cell in newcells:
+                            cells.append(cell)
+
+                    for cell in cells:
+                        cell.speed = speed
+                        cell.size = size
 
             elif event.type == py.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button clicked
@@ -201,7 +238,7 @@ def run_cells(clock, overlay, screen):
                     what_have_i_played = 'P'
                 else:
                     what_have_i_played = 'S'
-                text_surface = font.render(what_have_i_played, True, black)
+                text_surface = py.font.Font(None, int((cell.size/100)*65)).render(what_have_i_played, True, black)
 
                 text_rect = text_surface.get_rect()
                 text_rect.center = (cell.position)
@@ -278,7 +315,7 @@ def run_cells(clock, overlay, screen):
 
             #reproduce and die every minute
             current_time = py.time.get_ticks()
-            if current_time - last_action_time1 >= 5000:
+            if current_time - last_action_time1 >= life_time:
                 last_action_time1 = current_time 
 
                 deadlist = []
@@ -286,7 +323,7 @@ def run_cells(clock, overlay, screen):
 
                 #let the ten cells with highest fitness reproduce:
                 #bornlist is the top ten cells with highest fitness
-                bornlist = heapq.nlargest(5, cells, key=lambda cell: cell.fitness)
+                bornlist = heapq.nlargest(no_cells_in_gen, cells, key=lambda cell: cell.fitness)
 
 
 
@@ -296,7 +333,6 @@ def run_cells(clock, overlay, screen):
                     #for cell in bornlist, change its strategy slightly with a 5% chance
                     num = random.random()
                     if num > 1 - mutation_chance:
-                        print('mutated')
 
 
                         if baby.strat == (0,0,1):
@@ -308,7 +344,7 @@ def run_cells(clock, overlay, screen):
 
 
                 #deadlist is the bottom ten cells with the lowest fitness
-                deadlist = random.sample(cells,5)
+                deadlist = random.sample(cells,no_cells_in_gen)
 
                 for cell in bornlist:
                     # Create a new instance of the Cell class for the born cell
@@ -396,76 +432,6 @@ def run_cells(clock, overlay, screen):
 
 
 
-#Mutation chance slider
-def sliders(screen, mutation_chance):
-    white_cornx, whitecorny = screen_w - 205, 5
-    sliderx = mutation_chance*155
-    sliderx = screen_w-205+25+sliderx
-
-    slider_coords = (sliderx, whitecorny+25)
-
-
-    settings_running = True
-    dragging = False
-
-    while settings_running == True:
-        py.draw.circle(screen, (0,0,0), (slider_coords), 10)
-        for event in py.event.get():
-            if event.type == py.MOUSEBUTTONDOWN and event.button == 1:
-                mouse_x, mousey = py.mouse.get_pos()
-                if numpy.linalg.norm(numpy.array((mouse_x, mousey)) - numpy.array(slider_coords)) <= 10:
-                    dragging = True
-            if event.type == py.MOUSEBUTTONUP and event.button == 1:
-                    dragging = not dragging
-            if event.type == py.MOUSEMOTION:
-                if dragging:
-                    mouse_x, mouse_y = py.mouse.get_pos()
-                    if mouse_x <= white_cornx +20:
-                        mouse_x = white_cornx+20
-                    if mouse_x >= white_cornx+180:
-                        mouse_x = white_cornx +180
-                    slider_coords = (mouse_x, whitecorny+25)
-
-            if event.type == py.KEYDOWN and event.key == py.K_s:
-                settings_running = False
-                return True, mutation_chance    
-            elif event.type == py.KEYDOWN and event.key == py.K_q:
-                settings_running = False  
-                return False , mutation_chance
-            
-       
-
-        py.draw.rect(screen, (0,0,0), (screen_w - 210, 0, 210, 60))
-        py.draw.rect(screen, (255,255,255), (white_cornx, whitecorny, 200, 50))
-
-        py.draw.rect(screen, (128,128,128), (white_cornx+20, whitecorny+20, 160, 10))
-
-        py.draw.circle(screen, (128,128,128), (white_cornx+22, whitecorny+25), 5)
-        py.draw.circle(screen, (128,128,128), (white_cornx+180, whitecorny+25), 5)  
-
-        py.draw.circle(screen, (0,0,0), (slider_coords), 10)
-
-
-
-        mut_chance = fontsmall.render('Chance of Mutation', True, black)
-        mutrect = mut_chance.get_rect()
-        mutrect.center = (white_cornx + 100, whitecorny+10)
-        screen.blit(mut_chance, mutrect)
-
-        num = slider_coords[0]
-        num = num - screen_w +180
-        num = num/155
-        mutation_chance = num
-        num = 100*num
-        num = round(num, 1)
-        num = font.render(str(num), True, black)
-        textrect = num.get_rect()
-        textrect.center = (white_cornx +100, whitecorny +41 )
-        screen.blit(num, textrect)
-
-
-
-        py.display.flip()
 
 def initialize_game():
     py.init()

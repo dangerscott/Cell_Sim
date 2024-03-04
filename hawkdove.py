@@ -5,6 +5,7 @@
 
 import pygame as py
 import numpy
+from slider import slider
 
 from ClassCell import Cell, collide
 import tkinter as tk
@@ -41,23 +42,21 @@ counter = 0
 
 speed = 40
 
-def generate_population(ishawk):
+def generate_population(ishawk, n):
     population = []
     if ishawk == 0.5:
-        for _ in range(200):
+        for _ in range(n):
             x, y = random.randrange(0, screen_w), random.randrange(0, screen_h)
-            celli = Cell((x, y), size=size * 2, speed=speed, ishawk = random.choice((-1,1)))
+            celli = Cell((x, y), size=size , speed=speed, ishawk = random.choice((-1,1)))
             population.append(celli)
     else:
-        for _ in range(200):
+        for _ in range(n):
             x, y = random.randrange(0, screen_w), random.randrange(0, screen_h)
-            celli = Cell((x, y), size=size * 2, speed=speed, ishawk = ishawk)
+            celli = Cell((x, y), size=size , speed=speed, ishawk = ishawk)
             population.append(celli)
     return population
 
-hawks = generate_population(1)
-doves = generate_population(-1)
-fiftyfifty = generate_population(0.5)
+
 
 #hawk, dove payoff matrix
 playera = numpy.array([[0,3],
@@ -129,7 +128,8 @@ def popup():
  
     py.quit()
 #Game loop
-def run_cells(cells):
+def run_cells(ishawk, n):
+    cells = generate_population(ishawk, n)
     py.init()
     clock = py.time.Clock()
 
@@ -157,6 +157,11 @@ def run_cells(cells):
     #Build tree for cells to find nearest neighbour efficiently
     tree, list = build_ckd(cells)    
     last_action_time1, last_action_time2 = py.time.get_ticks(), py.time.get_ticks()
+    speed = 40
+    life_time = 1000
+    no_cells_in_gen = 10
+    size = 20
+    pop = 200
     while running == True:
 
 
@@ -174,8 +179,36 @@ def run_cells(cells):
                 if event.key == py.K_SPACE:
                     pause = not pause
                 if event.key == py.K_s:
-                    running, mutation_chance = sliders(screen, mutation_chance)
-                    print(mutation_chance)
+                    running, mutation_chance = slider(screen, running, (screen_w-210, 0), mutation_chance, 1, 'Chance of mutation')
+                    running, speed = slider(screen, running, (screen_w -210, 60), speed, 100, 'Cell speed')
+                    running, size = slider(screen, running, (screen_w-210, 120), size, 100, 'Cell radius')
+
+                    life_time = life_time/1000
+                    running, life_time = slider(screen, running, (screen_w - 210, 180), life_time, 100, 'Cell lifespan (s)')
+                    life_time = life_time*1000
+
+                    running, no_cells_in_gen = slider(screen, running, (screen_w - 210, 240), no_cells_in_gen, 50, 'Cells born/dead / gen')
+
+                    no_cells_in_gen = int(no_cells_in_gen)
+
+                    running, pop = slider(screen, running, (screen_w-210, 300), pop, 500, "Population")
+                    pop = int(pop)
+                    if pop < 10:
+                        pop = 10
+                        deadlist = random.sample(cells, len(cells)-pop)
+                        cells = [cell for cell in cells if cell not in deadlist]
+                    elif len(cells) > pop:
+                        deadlist = random.sample(cells, len(cells)-pop)
+                        cells = [cell for cell in cells if cell not in deadlist]
+
+                    if len(cells)+1  < pop:
+                        newcells = generate_population(ishawk, pop-len(cells))
+                        for cell in newcells:
+                            cells.append(cell)
+                    
+                    for cell in cells:
+                        cell.size = size
+                        cell.speed = speed                    
 
             elif event.type == py.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button clicked
@@ -233,7 +266,7 @@ def run_cells(cells):
             #reproduce and die every 5 secs
 
             current_time = py.time.get_ticks()
-            if current_time - last_action_time1 >= 1000:  # Convert seconds to milliseconds
+            if current_time - last_action_time1 >= life_time:  # Convert seconds to milliseconds
                 last_action_time1 = current_time
 
                 deadlist = []
@@ -241,25 +274,29 @@ def run_cells(cells):
 
                 #let the fifty cells with highest fitness reproduce:
                 #bornlist is the top ten cells with highest fitness
-                bornlist = heapq.nlargest(6, cells, key=lambda cell: cell.fitness)
+                if no_cells_in_gen > len(cells):
+                    no_cells_in_gen = len(cells)
+                bornlist = heapq.nlargest(no_cells_in_gen, cells, key=lambda cell: cell.fitness)
 
                 #cells in bornlist are born with 0 fitness
                 for cell in bornlist:
                     cell.randangle = random.uniform(0, 2 * numpy.pi)
                     cell.fitness = 0
                     cell.pause = 1
+                    cell.speed = speed
 
                     #for cell in bornlist, change it to hawk/dove with a 5% chance
                     if random.random() > 1 - mutation_chance:
                         cell.ishawk = cell.ishawk*-1
 
 
-                #deadlist is 50 random cells
-                deadlist = random.sample(cells, 6)
+                #deadlist is n random cells
+
+                deadlist = random.sample(cells, no_cells_in_gen)
 
 
                 for cell in bornlist:
-                    cells.append(Cell((cell.position), ishawk = cell.ishawk, size = size*2))
+                    cells.append(Cell((cell.position), ishawk = cell.ishawk, size = size))
                 cells = [cell for cell in cells if cell not in deadlist]
 
                 
@@ -341,79 +378,9 @@ def run_cells(cells):
     py.quit()
 
 #Mutation chance slider
-def sliders(screen, mutation_chance):
-    font = py.font.Font(None, 36)
-    fontsmall = py.font.Font(None, 25)
+    
 
-    white_cornx, whitecorny = screen_w - 205, 5
-    sliderx = mutation_chance*155
-    sliderx = screen_w-205+25+sliderx
-
-    slider_coords = (sliderx, whitecorny+25)
-
-
-    settings_running = True
-    dragging = False
-
-    while settings_running == True:
-        py.draw.circle(screen, (0,0,0), (slider_coords), 10)
-        for event in py.event.get():
-            if event.type == py.MOUSEBUTTONDOWN and event.button == 1:
-                mouse_x, mousey = py.mouse.get_pos()
-                if numpy.linalg.norm(numpy.array((mouse_x, mousey)) - numpy.array(slider_coords)) <= 10:
-                    dragging = True
-            if event.type == py.MOUSEBUTTONUP and event.button == 1:
-                    dragging = not dragging
-            if event.type == py.MOUSEMOTION:
-                if dragging:
-                    mouse_x, mouse_y = py.mouse.get_pos()
-                    if mouse_x <= white_cornx +20:
-                        mouse_x = white_cornx+20
-                    if mouse_x >= white_cornx+180:
-                        mouse_x = white_cornx +180
-                    slider_coords = (mouse_x, whitecorny+25)
-
-            if event.type == py.KEYDOWN and event.key == py.K_s:
-                settings_running = False
-                return True, mutation_chance    
-            elif event.type == py.KEYDOWN and event.key == py.K_q:
-                settings_running = False  
-                return False , mutation_chance
-            
-       
-
-        py.draw.rect(screen, (0,0,0), (screen_w - 210, 0, 210, 60))
-        py.draw.rect(screen, (255,255,255), (white_cornx, whitecorny, 200, 50))
-
-        py.draw.rect(screen, (128,128,128), (white_cornx+20, whitecorny+20, 160, 10))
-
-        py.draw.circle(screen, (128,128,128), (white_cornx+22, whitecorny+25), 5)
-        py.draw.circle(screen, (128,128,128), (white_cornx+180, whitecorny+25), 5)  
-
-        py.draw.circle(screen, (0,0,0), (slider_coords), 10)
-
-
-
-        mut_chance = fontsmall.render('Chance of Mutation', True, black)
-        mutrect = mut_chance.get_rect()
-        mutrect.center = (white_cornx + 100, whitecorny+10)
-        screen.blit(mut_chance, mutrect)
-
-        num = slider_coords[0]
-        num = num - screen_w +180
-        num = num/155
-        mutation_chance = num
-        num = 100*num
-        num = round(num, 1)
-        num = font.render(str(num), True, black)
-        textrect = num.get_rect()
-        textrect.center = (white_cornx +100, whitecorny +41 )
-        screen.blit(num, textrect)
-
-
-
-        py.display.flip()
 popup()
-run_cells(fiftyfifty)
-run_cells(hawks)
-run_cells(doves)
+run_cells(0.5, 200)
+run_cells(1, 200)
+run_cells(-1, 200)
