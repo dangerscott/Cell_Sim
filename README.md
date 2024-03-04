@@ -23,6 +23,8 @@ to watch these simulations, just run their respective python file.
 in both, you can pause and unpause the simulation with space, and quit the simulation with q. to see the characteristics of the cell,
 click on it, and the characteristics are printed in the output.
 
+To access and change parameters, press s.
+
 ------------------------------------
 
 
