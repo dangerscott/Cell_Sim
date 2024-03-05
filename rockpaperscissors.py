@@ -12,7 +12,7 @@ import numpy
 import time
 from ClassCell import Cell, collide
 
-from slider import slider
+from slider import enter_settings
 import os
 
 # Get the directory of the currently running Python script
@@ -155,12 +155,17 @@ def run_cells(clock, overlay, screen):
     framecounter = 0
     pause = 1
     running = True
-    mutation_chance = 0.05
+
     speed = 20
     life_time = 5000
     no_cells_in_gen = 5
     size = 60
     pop = len(cells)
+    mutation_chance = 0.05
+
+    param_dict = {0:[speed, 100, 'Speed'], 1:[life_time, 5000, 'Lifetime (ms)'], 2:[no_cells_in_gen, len(cells), 'No. cells per gen'],
+                  3:[size, 100, 'Size'], 4:[pop, 200, 'Population'], 5:[mutation_chance, 1, 'Mutation Chance']}
+    
     while running == True:
 
         #Build tree for cells to find nearest neighbour efficiently
@@ -179,40 +184,25 @@ def run_cells(clock, overlay, screen):
                 if event.key == py.K_SPACE:
                     pause = -pause
                 if event.key == py.K_s:
-                    running, mutation_chance = slider(screen, running, (screen_w-210, 0), mutation_chance, 1, 'Chance of mutation')
-                    running, speed = slider(screen, running, (screen_w -210, 60), speed, 100, 'Cell speed')
-                    running, size = slider(screen, running, (screen_w-210, 120), size, 100, 'Cell radius')
-
-                    life_time = life_time/1000
-                    running, life_time = slider(screen, running, (screen_w - 210, 180), life_time, 10, 'Cell lifespan (s)')
-                    life_time = life_time*1000
-
-                    running, no_cells_in_gen = slider(screen, running, (screen_w - 210, 240), no_cells_in_gen, 50, 'Cells born/dead / gen')
-
-                    no_cells_in_gen = int(no_cells_in_gen)
-
-                    running, pop = slider(screen, running, (screen_w-210, 300), pop, 500, "Population")
-                    pop = int(pop)
-                    if pop < 10:
-                        pop = 10
-                        deadlist = random.sample(cells, len(cells)-pop)
-                        cells = [cell for cell in cells if cell not in deadlist]
-                    elif len(cells) > pop:
-                        deadlist = random.sample(cells, len(cells)-pop)
+                    param_dict = enter_settings(screen, param_dict)
+                    speed = param_dict[0][0]
+                    life_time = param_dict[1][0]
+                    no_cells_in_gen = param_dict[2][0]
+                    size = param_dict[3][0]
+                    pop = param_dict[4][0]
+                    mutation_chance = param_dict[5][0]
+                
+                    if param_dict[4][0] < len(cells)-5:
+                        
+                        deadlist = random.sample(cells, len(cells)-(param_dict[4][0]+2))
                         cells = [cell for cell in cells if cell not in deadlist]
 
-                    if len(cells)+1  < pop:
-                        newcells = []
-                        for i in range(pop - len(cells)):
-                            newstrat = random.choice(((0,0,1), (0,1,0), (1,0,0)))
-                            celli = Cell((random.random()*screen_w, random.random()*screen_h), strat = newstrat)
-                            newcells.append(celli)
-                        for cell in newcells:
-                            cells.append(cell)
-
-                    for cell in cells:
-                        cell.speed = speed
-                        cell.size = size
+                    if param_dict[4][0] > len(cells):
+                        for i in range(param_dict[4][0] - len(cells)):
+                            cells.append(Cell((random.random()*screen_w, random.random()*screen_h), 
+                                             strat = random.choice(((0,0,1), (0,1,0), (1,0,0)))))
+                    if param_dict[3][0] == 0:
+                        param_dict[3][0] = 1
 
             elif event.type == py.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button clicked
@@ -229,6 +219,8 @@ def run_cells(clock, overlay, screen):
 
         #draw cells
         for cell in cells:
+            cell.size = param_dict[3][0]
+            cell.speed = param_dict[0][0]
             py.draw.circle(screen, black, cell.position, (cell.size/2)+1)
             py.draw.circle(screen, cell.colour, cell.position, cell.size/2)
             if cell.disptime >= 1 and cell.disptime <= 10:
@@ -344,7 +336,9 @@ def run_cells(clock, overlay, screen):
 
 
                 #deadlist is the bottom ten cells with the lowest fitness
-                deadlist = random.sample(cells,no_cells_in_gen)
+                if param_dict[2][0] >= len(cells):
+                    param_dict[2][0] = len(cells)
+                deadlist = random.sample(cells, param_dict[2][0])
 
                 for cell in bornlist:
                     # Create a new instance of the Cell class for the born cell
