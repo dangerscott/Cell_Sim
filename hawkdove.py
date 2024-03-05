@@ -167,8 +167,8 @@ def run_cells(ishawk, n):
     size = 20
     pop = 200
 
-    param_dict = {0:[speed, 100, 'Speed'], 1:[life_time, 5000, 'Lifetime (ms)'], 2:[no_cells_in_gen, len(cells), 'No. cells per gen'],
-                  3:[size, 100, 'Size'], 4:[pop, 500, 'Population'], 5:[mutation_chance, 1, 'Mutation Chance']}
+    param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Lifetime (ms)', 0], 2:[no_cells_in_gen, len(cells), 'No. cells per gen', 0],
+                  3:[size, 100, 'Size', 1], 4:[pop, 500, 'Population', 0], 5:[mutation_chance, 1, 'Mutation Chance', 3]}
     
 
     while running == True:
@@ -269,6 +269,10 @@ def run_cells(ishawk, n):
                 if no_cells_in_gen > len(cells):
                     no_cells_in_gen = len(cells)
                 bornlist = heapq.nlargest(param_dict[2][0], cells, key=lambda cell: cell.fitness)
+                nbornlist = []
+                for cell in bornlist:
+                    nbornlist.append(Cell((cell.position), cell.ishawk))
+                bornlist = nbornlist
 
                 #cells in bornlist are born with 0 fitness
                 for cell in bornlist:

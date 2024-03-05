@@ -9,7 +9,7 @@ class Slider:
         self.name = param_name
         self.max = param_max
         self.value = param_value
-
+        
 
 
 
@@ -17,7 +17,7 @@ def gensliders(param_dict):
     sliders = []
     n=0
     for i in param_dict:        
-        value,max,name = param_dict[i]
+        value,max,name,sigfig = param_dict[i]
 
         parameter_length = 160*(value/max)
         slider_coords = ((screen_w/2)+25+parameter_length, (i*60)+30)
@@ -54,14 +54,22 @@ def draw_boxes(screen, sliders, param_dict):
         slider_value -= ((screen_w/2)+25)
         slider_value /= 160
         slider_value *= slider.max
-        param_dict[sliders.index(slider)][0] = int(round(slider_value, 2))
+        
 
 
+
+
+        sigfig = param_dict[sliders.index(slider)][3]
+        slider_value = round(slider_value, sigfig)
+        if sigfig == 0 :
+            slider_value = int(slider_value)
+        param_dict[sliders.index(slider)][0] = slider_value
         slider_value = bigfont.render(str(slider_value), True, (0,0,0))
         value_rect = slider_value.get_rect()
         value_rect.center = (screen_w/2 + 100, sliders.index(slider)*60+45)
         screen.blit(slider_value, value_rect)
         py.draw.circle(screen, (0,0,0), (slider.center), 10)
+
     return param_dict
 
 #This sits inside a while dragging loop, where you should already have determined which slider you want to drag

@@ -163,8 +163,8 @@ def run_cells(clock, overlay, screen):
     pop = len(cells)
     mutation_chance = 0.05
 
-    param_dict = {0:[speed, 100, 'Speed'], 1:[life_time, 5000, 'Lifetime (ms)'], 2:[no_cells_in_gen, len(cells), 'No. cells per gen'],
-                  3:[size, 100, 'Size'], 4:[pop, 200, 'Population'], 5:[mutation_chance, 1, 'Mutation Chance']}
+    param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Lifetime (ms)', 0], 2:[no_cells_in_gen, len(cells), 'No. cells per gen', 0],
+                  3:[size, 100, 'Size', 0], 4:[pop, 200, 'Population', 0], 5:[mutation_chance, 1, 'Mutation Chance', 3]}
     
     while running == True:
 
@@ -223,7 +223,7 @@ def run_cells(clock, overlay, screen):
             cell.speed = param_dict[0][0]
             py.draw.circle(screen, black, cell.position, (cell.size/2)+1)
             py.draw.circle(screen, cell.colour, cell.position, cell.size/2)
-            if cell.disptime >= 1 and cell.disptime <= 10:
+            if cell.disptime >= 1 and cell.disptime <= 10 and cell.age > 10:
                 if cell.lastplayed == 0:
                     what_have_i_played = 'R'
                 elif cell.lastplayed == 1:
@@ -303,7 +303,7 @@ def run_cells(clock, overlay, screen):
                 if cell.pause >= 1:
                     cell.disptime +=1
                     cell.pause += 1
- 
+                cell.age +=1
 
             #reproduce and die every minute
             current_time = py.time.get_ticks()
@@ -346,7 +346,7 @@ def run_cells(clock, overlay, screen):
                     
                     # Reset the fitness of the born cell to zero
                     born_cell.fitness = 0
-                    born_cell.pause = 1
+                    born_cell.pause = 10
                     # Append the born cell to the cells list
                     cells.append(born_cell)
 
