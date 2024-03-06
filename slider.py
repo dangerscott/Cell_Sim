@@ -20,7 +20,7 @@ def gensliders(param_dict):
         value,max,name,sigfig = param_dict[i]
 
         parameter_length = 160*(value/max)
-        slider_coords = ((screen_w/2)+25+parameter_length, (i*60)+30)
+        slider_coords = (((screen_w/2)-100)+25+parameter_length, (i*60)+30)
 
         sliders.append(Slider(value, max, name, slider_coords))
 
@@ -32,7 +32,7 @@ def draw_boxes(screen, sliders, param_dict):
     for slider in sliders:
 
 
-        corner = screen_w/2, (slider.center[1]-30)
+        corner = (screen_w/2)-100, (slider.center[1]-30)
         x,y = corner
         wx, wy = x+5, y+5
         gx, gy = wx+20, wy+20
@@ -51,7 +51,7 @@ def draw_boxes(screen, sliders, param_dict):
         screen.blit(slider_name, name_rect)
     
         slider_value = slider.center[0]
-        slider_value -= ((screen_w/2)+25)
+        slider_value -= (((screen_w/2)-100)+25)
         slider_value /= 160
         slider_value *= slider.max
         
@@ -66,7 +66,7 @@ def draw_boxes(screen, sliders, param_dict):
         param_dict[sliders.index(slider)][0] = slider_value
         slider_value = bigfont.render(str(slider_value), True, (0,0,0))
         value_rect = slider_value.get_rect()
-        value_rect.center = (screen_w/2 + 100, sliders.index(slider)*60+45)
+        value_rect.center = (screen_w/2, sliders.index(slider)*60+45)
         screen.blit(slider_value, value_rect)
         py.draw.circle(screen, (0,0,0), (slider.center), 10)
 
@@ -76,10 +76,10 @@ def draw_boxes(screen, sliders, param_dict):
 def move_sliders(screen, slider, mouse_pos):
     mouse_x, mouse_y = mouse_pos
 
-    if mouse_x < (screen_w/2)+25:
-        mouse_x = (screen_w/2)+25
-    if mouse_x > (screen_w/2)+160+25:
-        mouse_x = (screen_w/2)+160+25
+    if mouse_x < ((screen_w/2)-100)+25:
+        mouse_x = ((screen_w/2)-100)+25
+    if mouse_x > ((screen_w/2)-100)+160+25:
+        mouse_x = ((screen_w/2)-100)+160+25
     
     oldx,y  = slider.center
     oldx = mouse_x

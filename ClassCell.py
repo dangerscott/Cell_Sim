@@ -9,7 +9,7 @@ import math
 
 
 class Cell:
-    def __init__(self, position, strat = numpy.random.dirichlet(numpy.ones(3)), fitness=0, speed = 10, age = 0, colour = white, size=5, isdead=0, ishawk = 1):
+    def __init__(self, position,  ishawk = None, strat = None, fitness=0, speed = 10, age = 0, colour = white, size=5, isdead=0, changespecies = 0):
 
         if position is None:
             position = (random.randint(0,screen_w), random.randint(0,screen_h))
@@ -17,9 +17,9 @@ class Cell:
         self.position = position
         self.disptime = 0 
         self.lastplayed = 0
-
+        self.changespecies = changespecies
         self.move = self.move(self)
-
+        self.age = age
         self.ishawk = ishawk
 
         self.randangle = 2*math.pi*random.random()
@@ -47,7 +47,7 @@ class Cell:
 
     
     def __str__(self):
-        return f"Position: {self.position}, Fitness: {self.fitness}, Strategy: {self.strat}, speed: {self.speed}, randangle: {self.randangle}"
+        return f"Position: {self.position}, Fitness: {self.fitness}, Strategy: {self.ishawk}, speed: {self.speed}, randangle: {self.randangle}"
 
 
     class move:

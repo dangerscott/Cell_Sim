@@ -94,6 +94,44 @@ def popup():
     text4 = 'There are three iterations of different populations.'
     text5 = 'To cycle through them, press q. To access/exit settings, press s.'
     image = py.image.load(str(current_directory)+'/assets/hawk_mouse.png')
+
+    screen.fill((white))
+    screen.blit(image, (0,0))
+    py.image.load(str(current_directory)+'/assets/hawk_mouse.png')
+
+    text1_surface = font.render(text1, True, black)
+    text1_rect = text1_surface.get_rect(center = (w/2,h/2 - 180))
+    screen.blit(text1_surface, text1_rect)
+
+    text2_surface = font.render(text2, True, black)
+    text2_rect = text2_surface.get_rect(center = (w/2,h/2 - 160))
+    screen.blit(text2_surface, text2_rect)
+
+    text3_surface = font.render(text3, True, black)
+    text3_rect = text3_surface.get_rect(center = (w/2,h/2 - 140))
+    screen.blit(text3_surface, text3_rect)
+
+    text4_surface = font.render(text4, True, black)
+    text4_rect = text4_surface.get_rect(center = (w/2,h/2 -120))
+    screen.blit(text4_surface, text4_rect)
+
+    text5_surface = font.render(text5, True, black)
+    text5_rect = text5_surface.get_rect(center = (w/2,h/2 - 100))
+    screen.blit(text5_surface, text5_rect)
+
+
+    py.draw.rect(screen, black, (w/2-40, h-30-20, 80, 40))
+    py.draw.rect(screen, (255,255,255), (w/2 -35, h-30-15, 70, 30))
+
+    okrect = py.Rect(w/2 -40, h-50, 80, 40)
+
+
+    text7_surace = font.render('OK', True, black)
+    text_7_rect = text7_surace.get_rect(center = (w/2, h-30))
+    screen.blit(text7_surace, text_7_rect)
+
+    py.display.flip()
+
     while running == True:
         for event in py.event.get():
             if event.type == py.QUIT:
@@ -101,30 +139,12 @@ def popup():
             if event.type == py.KEYDOWN:
                 if event.key == py.K_q:
                     running = False
-        screen.fill((white))
-        screen.blit(image, (0,0))
-        py.image.load(str(current_directory)+'/assets/hawk_mouse.png')
+            if event.type == py.MOUSEBUTTONDOWN:
+                mouseposx, mouseposy = py.mouse.get_pos()
+                mouserect = py.Rect(mouseposx, mouseposy, 1, 1)
+                if mouserect.colliderect(okrect):
+                    running = False
 
-        text1_surface = font.render(text1, True, black)
-        text1_rect = text1_surface.get_rect(center = (w/2,h/2 - 180))
-        screen.blit(text1_surface, text1_rect)
-
-        text2_surface = font.render(text2, True, black)
-        text2_rect = text2_surface.get_rect(center = (w/2,h/2 - 160))
-        screen.blit(text2_surface, text2_rect)
-
-        text3_surface = font.render(text3, True, black)
-        text3_rect = text3_surface.get_rect(center = (w/2,h/2 - 140))
-        screen.blit(text3_surface, text3_rect)
-
-        text4_surface = font.render(text4, True, black)
-        text4_rect = text4_surface.get_rect(center = (w/2,h/2 -120))
-        screen.blit(text4_surface, text4_rect)
-
-        text5_surface = font.render(text5, True, black)
-        text5_rect = text5_surface.get_rect(center = (w/2,h/2 - 100))
-        screen.blit(text5_surface, text5_rect)
-        py.display.flip()
  
     py.quit()
 #Game loop
@@ -155,19 +175,20 @@ def run_cells(ishawk, n):
     framecounter = 0
 
     last_action_time3 = 0
-    mutation_chance = 0.05
     framecounter = 0
     pause = True
     #Build tree for cells to find nearest neighbour efficiently
     tree, list = build_ckd(cells)    
     last_action_time1, last_action_time2 = py.time.get_ticks(), py.time.get_ticks()
-    speed = 40
+
+    mutation_chance = 0.05
+    speed = 55
     life_time = 1000
     no_cells_in_gen = 10
-    size = 20
-    pop = 200
+    size = 15
+    pop = len(cells)
 
-    param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Lifetime (ms)', 0], 2:[no_cells_in_gen, len(cells), 'No. cells per gen', 0],
+    param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Reprod. interval (ms)', 0], 2:[no_cells_in_gen, len(cells)/2, 'Cells born/dead per gen', 0],
                   3:[size, 100, 'Size', 1], 4:[pop, 500, 'Population', 0], 5:[mutation_chance, 1, 'Mutation Chance', 3]}
     
 
@@ -193,13 +214,16 @@ def run_cells(ishawk, n):
                         
                         deadlist = random.sample(cells, len(cells)-(param_dict[4][0]+2))
                         cells = [cell for cell in cells if cell not in deadlist]
+                        deadlist =[]
 
                     if param_dict[4][0] > len(cells):
                         for i in range(param_dict[4][0] - len(cells)):
-                            cells.append(Cell((random.random()*screen_w, random.random()*screen_h), ishawk = ishawk))
+                            cells.append(Cell((random.random()*screen_w, random.random()*screen_h), ishawk = random.choice((-1,1))))
+
+
                     if param_dict[3][0] == 0:
                         param_dict[3][0] = 1
-
+                    param_dict[2][1] = len(cells)/2
             elif event.type == py.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button clicked
                     mouse_pos = py.mouse.get_pos()
@@ -223,13 +247,7 @@ def run_cells(ishawk, n):
 
                     #if a cell has moved, update the tree
                     tree, list = build_ckd(cells)
-
-                current_time = py.time.get_ticks()
-
-                if current_time - last_action_time2 >= 1:
-                    last_action_time2 = current_time
-                    #this is how the cell moves randomly
-                    cell.randangle = (cell.randangle+random.choice([-1,1])*0.5)
+                cell.randangle = cell.randangle+(random.choice([-1,1])*0.2)
 
                 #this is the cell's nearest neighbour
                 nearestCell = find_nearest_cell(tree, list, cell.position)
@@ -259,50 +277,42 @@ def run_cells(ishawk, n):
 
             current_time = py.time.get_ticks()
             if current_time - last_action_time1 >= param_dict[1][0]:  # Convert seconds to milliseconds
-                last_action_time1 = current_time
+                last_action_time1 = current_time 
 
-                deadlist = []
-                bornlist = []
+                #let the n cells with highest fitness reproduce:
 
-                #let the fifty cells with highest fitness reproduce:
-                #bornlist is the top ten cells with highest fitness
-                if no_cells_in_gen > len(cells):
-                    no_cells_in_gen = len(cells)
+                if param_dict[2][0] > len(cells):
+                    param_dict[2][0] = len(cells)
+
                 bornlist = heapq.nlargest(param_dict[2][0], cells, key=lambda cell: cell.fitness)
+
                 nbornlist = []
                 for cell in bornlist:
                     nbornlist.append(Cell((cell.position), cell.ishawk))
-                bornlist = nbornlist
+                bornlist = []
 
                 #cells in bornlist are born with 0 fitness
-                for cell in bornlist:
+                for cell in nbornlist:
                     cell.randangle = random.uniform(0, 2 * numpy.pi)
                     cell.fitness = 0
                     cell.pause = 1
-                    cell.speed = speed
+                    cell.speed = param_dict[0][1]
 
-
-                    #for cell in bornlist, change it to hawk/dove with a 5% chance
-                    if random.random() > 1 - param_dict[5][0]:
-                        cell.ishawk = cell.ishawk*-1
-
+                    # Mutate the cell based on the mutation chance
+                    if random.random() < param_dict[5][0]:
+                        cell.ishawk *= -1
 
                 #deadlist is n random cells
                 if param_dict[2][0] >= len(cells):
                     param_dict[2][0] = len(cells)
                 deadlist = random.sample(cells, param_dict[2][0])
-
-
-                for cell in bornlist:
-                    cells.append(Cell((cell.position), ishawk = cell.ishawk, size = size))
                 cells = [cell for cell in cells if cell not in deadlist]
 
-                
-     
-                
-        
+                for cell in nbornlist:
+                    cells.append(cell)
 
 
+            #graph stuff
             current_time = py.time.get_ticks()
             if current_time - last_action_time3 >= 1000 or last_action_time3 == 0:  # Convert seconds to milliseconds
                 last_action_time3 = current_time           
@@ -310,20 +320,7 @@ def run_cells(ishawk, n):
                 x_data.append(framecounter)
                 y_data_h.append(len([cell for cell in cells if cell.ishawk == 1]))
                 y_data_d.append(len([cell for cell in cells if cell.ishawk == -1]))
-
-
-                h_list = []
-                d_list = []
-                for cell in cells:
-                    if cell.ishawk == 1:
-                        h_list.append(cell)
-                    else:
-                        d_list.append(cell)
                     
-
-
-            
-
                 # Plot the data
                 plt.figure(figsize=(screen_width_inches, 3)) 
                 try:
@@ -359,7 +356,7 @@ def run_cells(ishawk, n):
         for cell in cells:
             if cell.ishawk == -1:
                 cell.colour = (0,255,0)
-            else:
+            elif cell.ishawk == 1 :
                 cell.colour = (255,0,0)
                     
             cell.size = param_dict[3][0]
@@ -380,10 +377,7 @@ def run_cells(ishawk, n):
         py.display.flip()
     py.quit()
 
-#Mutation chance slider
-    
-
 popup()
-run_cells(0.5, 200)
-run_cells(1, 200)
-run_cells(-1, 200)
+run_cells(0.5, 100)
+run_cells(1, 100)
+run_cells(-1, 100)

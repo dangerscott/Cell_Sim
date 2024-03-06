@@ -82,6 +82,47 @@ def popup():
     text5 = 'To pause, press spacebar. To quit, press q.'
     text6 = 'To access and exit settings, press s.'
     image = py.image.load(str(current_directory)+'/assets/rps.png')
+
+    screen.fill((white))
+    screen.blit(image, (0,0))
+    py.image.load(str(current_directory)+'/assets/hawk_mouse.png')
+
+    text1_surface = font.render(text1, True, black)
+    text1_rect = text1_surface.get_rect(center = (w/2,h/2 - 170))
+    screen.blit(text1_surface, text1_rect)
+
+    text2_surface = font.render(text2, True, black)
+    text2_rect = text2_surface.get_rect(center = (w/2,h/2 - 150))
+    screen.blit(text2_surface, text2_rect)
+
+    text3_surface = font.render(text3, True, black)
+    text3_rect = text3_surface.get_rect(center = (w/2,h/2 - 130))
+    screen.blit(text3_surface, text3_rect)
+
+    text4_surface = font.render(text4, True, black)
+    text4_rect = text4_surface.get_rect(center = (w/2,h/2 - 110))
+    screen.blit(text4_surface, text4_rect)
+
+    text5_surface = font.render(text5, True, black)
+    text5_rect = text5_surface.get_rect(center = (w/2,h/2 -90))
+    screen.blit(text5_surface, text5_rect)
+
+    text6_surface = font.render(text6, True, black)
+    text6_rect = text6_surface.get_rect(center = (w/2,h/2 -70))
+    screen.blit(text6_surface, text6_rect)
+
+
+    py.draw.rect(screen, black, (w/2-40, h-30-20, 80, 40))
+    py.draw.rect(screen, (255,255,255), (w/2 -35, h-30-15, 70, 30))
+
+    okrect = py.Rect(w/2 -40, h-50, 80, 40)
+
+
+    text7_surace = font.render('OK', True, black)
+    text_7_rect = text7_surace.get_rect(center = (w/2, h-30))
+    screen.blit(text7_surace, text_7_rect)
+
+    py.display.flip()
     while running == True:
         for event in py.event.get():
             if event.type == py.QUIT:
@@ -89,34 +130,12 @@ def popup():
             if event.type == py.KEYDOWN:
                 if event.key == py.K_q:
                     running = False
-        screen.fill((white))
-        screen.blit(image, (0,0))
-        py.image.load(str(current_directory)+'/assets/hawk_mouse.png')
+            if event.type == py.MOUSEBUTTONDOWN:
+                mouseposx, mouseposy = py.mouse.get_pos()
+                mouserect = py.Rect(mouseposx, mouseposy, 1, 1)
+                if mouserect.colliderect(okrect):
+                    running = False
 
-        text1_surface = font.render(text1, True, black)
-        text1_rect = text1_surface.get_rect(center = (w/2,h/2 - 170))
-        screen.blit(text1_surface, text1_rect)
-
-        text2_surface = font.render(text2, True, black)
-        text2_rect = text2_surface.get_rect(center = (w/2,h/2 - 150))
-        screen.blit(text2_surface, text2_rect)
-
-        text3_surface = font.render(text3, True, black)
-        text3_rect = text3_surface.get_rect(center = (w/2,h/2 - 130))
-        screen.blit(text3_surface, text3_rect)
-
-        text4_surface = font.render(text4, True, black)
-        text4_rect = text4_surface.get_rect(center = (w/2,h/2 - 110))
-        screen.blit(text4_surface, text4_rect)
-
-        text5_surface = font.render(text5, True, black)
-        text5_rect = text5_surface.get_rect(center = (w/2,h/2 -90))
-        screen.blit(text5_surface, text5_rect)
-
-        text6_surface = font.render(text6, True, black)
-        text6_rect = text6_surface.get_rect(center = (w/2,h/2 -70))
-        screen.blit(text6_surface, text6_rect)
-        py.display.flip()
 
 
 
@@ -151,19 +170,19 @@ def run_cells(clock, overlay, screen):
     y_data_r = []
     y_data_p = []
     y_data_s = []
-    num_of_best_strat_cells_data = []
+
     framecounter = 0
     pause = 1
     running = True
 
-    speed = 20
-    life_time = 5000
-    no_cells_in_gen = 5
-    size = 60
+    speed = 30
+    life_time = 1000
+    no_cells_in_gen = 10
+    size = 45
     pop = len(cells)
     mutation_chance = 0.05
 
-    param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Lifetime (ms)', 0], 2:[no_cells_in_gen, len(cells), 'No. cells per gen', 0],
+    param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Lifetime (ms)', 0], 2:[no_cells_in_gen, len(cells)/2, 'No. cells per gen', 0],
                   3:[size, 100, 'Size', 0], 4:[pop, 200, 'Population', 0], 5:[mutation_chance, 1, 'Mutation Chance', 3]}
     
     while running == True:
@@ -203,7 +222,7 @@ def run_cells(clock, overlay, screen):
                                              strat = random.choice(((0,0,1), (0,1,0), (1,0,0)))))
                     if param_dict[3][0] == 0:
                         param_dict[3][0] = 1
-
+                    param_dict[2][1] = len(cells)/2    
             elif event.type == py.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button clicked
                     mouse_pos = py.mouse.get_pos()
@@ -317,7 +336,11 @@ def run_cells(clock, overlay, screen):
                 #bornlist is the top ten cells with highest fitness
                 bornlist = heapq.nlargest(no_cells_in_gen, cells, key=lambda cell: cell.fitness)
 
+                nbornlist = []
+                for cell in bornlist:
+                    nbornlist.append(Cell((cell.position), strat = cell.strat))
 
+                bornlist = nbornlist
 
                 #cells in bornlist are born with 0 fitness
                 for baby in bornlist:
