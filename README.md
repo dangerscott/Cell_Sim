@@ -1,7 +1,5 @@
 this is a simulation of interactions, reproduction and death in a population
 
------------------------------------
-
 in rockpaperscissors.py, the area is populated with cells that only play rock. Every 5 seconds, the top five cells in terms of 
 fitness reproduce, and 5 randomly die. Each cell that is born has a chance to mutate to the move that beats its parent - 
 rock -> paper -> scissors.
@@ -20,12 +18,10 @@ The populations are plotted.
 
 -------------------------------------
 
-to watch these simulations, just download the repo and run their respective python file.
+to watch these simulations, just run their respective python file.
 
 in both, you can pause and unpause the simulation with space, and quit the simulation with q. to see the characteristics of the cell,
 click on it, and the characteristics are printed in the output.
-
-To access and change parameters, press s.
 
 ------------------------------------
 

@@ -1,46 +1,42 @@
-#################################################
-#when you run this file, it should Just Work
-#If you press spacebar, the game pauses. If you click on a cell, the game outputs the cell's info, including fitness and strategy.
-#To adjust screen height and width parameters, go to lines 29 and 30
-#To adjust cell size, go to line 31
-#To adjust cell speed, go to line 43.
-
-
-speed = 20
 import pygame as py
 import numpy
-import time
-from ClassCell import Cell, collide
-
-from slider import enter_settings
+from CellClass import Cell, collide
+from settings import enter_settings
 import os
 
 # Get the directory of the currently running Python script
 current_directory = os.path.dirname(__file__)
 
-
 #these are for calculating the nearest cell to a cell efficiently (important for telling if two cells have collided)
-from treestuff import build_ckd, find_nearest_cell
+from BuildTree import build_ckd, find_nearest_cell
 
 #heapq helps find top ten and bottom ten cells in terms of fitness
 import heapq
 
 #user's screen variables
-from screenstuff import screen_w, screen_h, screen_width_inches
-#TO ADJUST GAME SIZE, MULTIPLY THESE BY YOUR DESIRED NUMBER
+from ScreenInfo  import screen_w, screen_h, screen_width_inches
+
 screen_w = screen_w
 screen_h = int(screen_h/1.1)
-size = 60
+
 import random
-random.seed(2)
+
 
 
 import matplotlib.pyplot as plt
 
 white = (200,200,200)
 black = (0,0,0)
-counter = 0
 
+
+
+#Change initial parameters here
+speed = 30
+life_time = 1000
+no_cells_in_gen = 10
+size = 45
+
+mutation_chance = 0.05
 
 cells = []
 
@@ -49,6 +45,12 @@ for i in range(100):
     x,y = random.randrange(0,screen_w), random.randrange(0,screen_h)
     celli = Cell((x,y), size=size, speed = speed, strat = (1,0,0) )
     cells.append(celli)
+
+pop = len(cells)
+
+#
+param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Lifetime (ms)', 0], 2:[no_cells_in_gen, len(cells)/2, 'No. cells per gen', 0],
+                3:[size, 100, 'Size', 0], 4:[pop, 200, 'Population', 0], 5:[mutation_chance, 1, 'Mutation Chance', 3]}
 
 
 #rps payoff matrix
@@ -68,6 +70,8 @@ def engage(cella,cellb, payoffa, payoffb):
 font = py.font.Font(None, 36)
 fontsmall = py.font.Font(None, 25)
 
+
+#Initial popup
 def popup():
     global current_directory
     py.init()
@@ -143,20 +147,20 @@ size = 60
 fps = 60
 font = py.font.Font(None, 36)
 #Game loop
-def run_cells(clock, overlay, screen):
+def run_cells(clock, overlay, screen, param_dict, cells):
 
 
     py.display.set_caption('Rock Paper Scissors')
     screen = py.display.set_mode((screen_w,screen_h))
 
 
+    #The overlay that the graph sits over (Makes the cells less distracting when trying to read it)
     overlay.set_alpha(128)  # Set transparency (0 = fully transparent, 255 = fully opaque)
     overlay.fill(black)
 
 
     last_action_time = 0
     last_action_time1 = 0
-    global cells
     global average
     global fps
     global rps
@@ -175,20 +179,19 @@ def run_cells(clock, overlay, screen):
     pause = 1
     running = True
 
-    speed = 30
-    life_time = 1000
-    no_cells_in_gen = 10
-    size = 45
-    pop = len(cells)
-    mutation_chance = 0.05
 
-    param_dict = {0:[speed, 100, 'Speed', 0], 1:[life_time, 5000, 'Lifetime (ms)', 0], 2:[no_cells_in_gen, len(cells)/2, 'No. cells per gen', 0],
-                  3:[size, 100, 'Size', 0], 4:[pop, 200, 'Population', 0], 5:[mutation_chance, 1, 'Mutation Chance', 3]}
+
     
     while running == True:
 
+        speed = param_dict[0][0]
+        life_time = param_dict[1][0]
+        no_cells_in_gen = param_dict[2][0]
+        size = param_dict[3][0]
+        mutation_chance = param_dict[5][0]        
         #Build tree for cells to find nearest neighbour efficiently
         tree, list = build_ckd(cells)    
+
       # PRINT CELL CHARACTERISTICS ON CLICK
         for event in py.event.get():
 
@@ -202,6 +205,8 @@ def run_cells(clock, overlay, screen):
             elif event.type == py.KEYDOWN:
                 if event.key == py.K_SPACE:
                     pause = -pause
+
+                #Enter settings on s
                 if event.key == py.K_s:
                     param_dict = enter_settings(screen, param_dict)
                     speed = param_dict[0][0]
@@ -243,6 +248,7 @@ def run_cells(clock, overlay, screen):
             py.draw.circle(screen, black, cell.position, (cell.size/2)+1)
             py.draw.circle(screen, cell.colour, cell.position, cell.size/2)
             if cell.disptime >= 1 and cell.disptime <= 10 and cell.age > 10:
+                #Display what the cell played in its last game
                 if cell.lastplayed == 0:
                     what_have_i_played = 'R'
                 elif cell.lastplayed == 1:
@@ -256,30 +262,13 @@ def run_cells(clock, overlay, screen):
 
                 # Draw text on the screen
                 screen.blit(text_surface, text_rect)  
-        for cell in cells:
-            bestcell = heapq.nlargest(3, cells, key=lambda cell: cell.fitness)
-            if any(fit == cell for fit in bestcell):
-                text_surface = py.font.Font(None, 20).render(str(cell.fitness), True, white)
-                text_rect = text_surface.get_rect()
-                text_rect.center = (cell.position[0], cell.position[1]-cell.size)
-                screen.blit(text_surface, text_rect)
                         
 
-
-
-
         if pause == 1:
-            num_of_best_strat_cells = 0
             for cell in cells:
-
                 #this changes colour of cells based on strategy
                 a,b,c = cell.strat
                 cell.colour = (255*a, 255*b, 255*c)
-                if cell.strat[0] > 0.29 and cell.strat[0] < 0.37:
-                    if cell.strat[1] > 0.29 and cell.strat[1] < 0.37: 
-                        if cell.strat[2] > 0.29 and cell.strat[2] < 0.37:
-                            cell.colour = white
-                            num_of_best_strat_cells += 1
                                 
                 #random movement
 
@@ -324,7 +313,7 @@ def run_cells(clock, overlay, screen):
                     cell.pause += 1
                 cell.age +=1
 
-            #reproduce and die every minute
+            #reproduce and die every n milliseconds
             current_time = py.time.get_ticks()
             if current_time - last_action_time1 >= life_time:
                 last_action_time1 = current_time 
@@ -424,7 +413,7 @@ def run_cells(clock, overlay, screen):
                 plt.gca().spines['left'].set_color('white')  # Set y-axis color to white
                 plt.tick_params(axis='y', colors='white') 
 
-                graphdir = str(current_directory) + '/graph.png'
+                graphdir = str(current_directory) + '/assets/rpsgraph.png'
                 plt.savefig(graphdir, bbox_inches='tight', pad_inches=0, transparent=True)  # Save the plot
                 plt.close()
 
@@ -462,7 +451,7 @@ def initialize_game():
 def main():
     clock, overlay, screen = initialize_game()
     popup()
-    run_cells(clock, overlay, screen)
+    run_cells(clock, overlay, screen, param_dict, cells)
 
 
 if __name__ == "__main__":

@@ -5,9 +5,9 @@
 
 import pygame as py
 import numpy
-from slider import enter_settings
+from settings import enter_settings
 
-from ClassCell import Cell, collide
+from CellClass import Cell, collide
 import tkinter as tk
 
 import matplotlib.pyplot as plt
@@ -19,13 +19,13 @@ current_directory = os.path.dirname(__file__)
 
 
 #these are for calculating the nearest cell to a cell efficiently (important for telling if two cells have collided)
-from treestuff import build_ckd, find_nearest_cell
+from BuildTree import build_ckd, find_nearest_cell
 
 #heapq helps find top ten and bottom ten cells in terms of fitness
 import heapq
 
 #user's screen variables
-from screenstuff import screen_w, screen_h, screen_width_inches
+from ScreenInfo import screen_w, screen_h, screen_width_inches
 #TO ADJUST GAME SIZE, MULTIPLY THESE BY YOUR DESIRED NUMBER
 screen_w = screen_w
 screen_h = screen_h
