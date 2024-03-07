@@ -1,5 +1,5 @@
 import pygame as py
-from screenstuff import screen_w, screen_h
+from ScreenInfo import screen_w, screen_h
 import numpy as np
 
 
