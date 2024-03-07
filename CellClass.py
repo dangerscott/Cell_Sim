@@ -1,7 +1,7 @@
 #This is where the Cell class is kept. It also contains the movement logic for the cells
 
 import random
-from screenstuff import screen_w, screen_h, white
+from ScreenInfo import screen_w, screen_h, white
 
 import numpy
 
