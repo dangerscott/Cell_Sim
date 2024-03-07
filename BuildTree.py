@@ -2,7 +2,7 @@ from scipy.spatial import cKDTree
 import pyqtree 
 import numpy as np
 
-from screenstuff import screen_w, screen_h
+from ScreenInfo import screen_w, screen_h
 
 
 # Build the cKD tree
