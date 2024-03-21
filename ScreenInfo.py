@@ -13,11 +13,11 @@ screen_h = display_info.current_h
 
 import tkinter as tk
 
-def get_screen_width_in_inches():
-    monitors = screeninfo.get_monitors()
-    primary_monitor = monitors[0]  # Assuming you want the primary monitor
-    width_mm = primary_monitor.width_mm
-    width_inches = width_mm / 25.4
-    return width_inches
+#def get_screen_width_in_inches():
+#    monitors = screeninfo.get_monitors()
+#    primary_monitor = monitors[0]  # Assuming you want the primary monitor
+#    width_mm = primary_monitor.width_mm
+#    width_inches = width_mm / 25.4
+#    return width_inches
 
-screen_width_inches = get_screen_width_in_inches()
+screen_width_inches = 10
