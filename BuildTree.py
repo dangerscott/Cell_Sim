@@ -1,5 +1,5 @@
 from scipy.spatial import cKDTree
-import pyqtree 
+
 import numpy as np
 
 from ScreenInfo import screen_w, screen_h
